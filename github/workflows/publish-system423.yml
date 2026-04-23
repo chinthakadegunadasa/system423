@@ -1,0 +1,39 @@
+name: System 423 Book Publishing
+
+on:
+  push:
+    branches:
+      - main  # Main branch එකට push කරන විට ක්‍රියාත්මක වේ
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Pandoc (Convert Markdown to PDF/Docx)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-recommended texlive-xetex
+
+      - name: Generate B5 PDF
+        run: |
+          pandoc Chapter-01.md -o System423_B5.pdf \
+          --pdf-engine=xelatex \
+          -V geometry:"paperwidth=176mm, paperheight=250mm, margin=20mm" \
+          -V mainfont="DejaVu Serif" \
+          --variable=alignment:justified
+
+      - name: Generate Docx (Full Justify)
+        run: |
+          pandoc Chapter-01.md -o System423_Draft.docx
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: System-423-Drafts
+          path: |
+            System423_B5.pdf
+            System423_Draft.docx
+            
