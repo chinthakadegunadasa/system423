@@ -1,39 +1,41 @@
-name: System 423 Book Publishing
+name: System 423 Auto-Publishing
 
 on:
   push:
+    paths:
+      - 'src/**'  # src තුළ වෙනසක් වූ විට පමණක් ක්‍රියාත්මක වේ
     branches:
-      - main  # Main branch එකට push කරන විට ක්‍රියාත්මක වේ
+      - main
 
 jobs:
-  build-and-deploy:
+  build-book:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Pandoc (Convert Markdown to PDF/Docx)
+      - name: Install Pandoc and LaTeX
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-recommended texlive-xetex
+          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended
 
-      - name: Generate B5 PDF
+      - name: Compile Full Book (B5 PDF)
         run: |
-          pandoc Chapter-01.md -o System423_B5.pdf \
+          # src තුළ ඇති සියලුම .md ගොනු අකාරාදී පිළිවෙළට ගෙන තනි PDF එකක් සාදයි
+          pandoc src/*.md -o output/System423_Full_B5.pdf \
           --pdf-engine=xelatex \
           -V geometry:"paperwidth=176mm, paperheight=250mm, margin=20mm" \
           -V mainfont="DejaVu Serif" \
-          --variable=alignment:justified
+          --variable=alignment:justified \
+          --toc  # පටුන (Table of Contents) ස්වයංක්‍රීයව එක් කරයි
 
-      - name: Generate Docx (Full Justify)
+      - name: Compile Full Book (Docx)
         run: |
-          pandoc Chapter-01.md -o System423_Draft.docx
+          pandoc src/*.md -o output/System423_Full_Draft.docx
 
-      - name: Upload Artifacts
+      - name: Archive Production Files
         uses: actions/upload-artifact@v3
         with:
-          name: System-423-Drafts
-          path: |
-            System423_B5.pdf
-            System423_Draft.docx
-            
+          name: System-423-Final-Build
+          path: output/
+        
